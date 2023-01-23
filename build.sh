@@ -1,16 +1,22 @@
 #!/bin/sh
 
-IMAGE='kirickme/supernova'
-TAG='0.2.0'
+DOCKER_IMAGE='kirickme/supernova'
+DOCKER_TAG='0.3.0'
 
-docker buildx create --name multibuilder
-docker buildx use multibuilder
+docker manifest inspect $DOCKER_IMAGE:$DOCKER_TAG >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+    docker buildx create --name multibuilder >/dev/null 2>&1
+    docker buildx use multibuilder
+    docker buildx build --push \
+                        --platform linux/amd64,linux/arm64 \
+                        --tag $DOCKER_IMAGE:$DOCKER_TAG \
+                        --tag $DOCKER_IMAGE:latest \
+                        .
+else
+    echo 'Image '$DOCKER_IMAGE:$DOCKER_TAG' already exists, building aborted.'
+    echo
+fi
 
-docker buildx build --push \
-                    --platform linux/amd64,linux/arm64/v8 \
-                    --tag $IMAGE:$TAG \
-                    .
-
-sleep 5
-
-docker image ls | grep $IMAGE
+docker pull $DOCKER_IMAGE:$DOCKER_TAG
+echo
+docker image ls | grep $DOCKER_IMAGE

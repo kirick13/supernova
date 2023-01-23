@@ -1,7 +1,7 @@
 
 import asyncio
 
-class BuilderShell:
+class SupernovaShell:
 	def __init__ (self, logger):
 		self.logger = logger
 
@@ -18,7 +18,7 @@ class BuilderShell:
 				break
 		return lines
 
-	async def _stream_subprocess(self, args, noerror = False):
+	async def _stream_subprocess(self, args, noerror = False, return_text = False):
 		try:
 			process = await asyncio.create_subprocess_exec(
 				*args,
@@ -44,8 +44,9 @@ class BuilderShell:
 
 	def exec (self, args, noerror = False):
 		loop = asyncio.new_event_loop()
-		rc = loop.run_until_complete(
+		return_code, stdout, stderr = loop.run_until_complete(
 			self._stream_subprocess(args, noerror),
 		)
 		loop.close()
-		return rc
+
+		return return_code, ''.join(el.decode() for el in stdout), ''.join(el.decode() for el in stderr)

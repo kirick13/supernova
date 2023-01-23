@@ -1,4 +1,8 @@
 
-from classes.builder import Builder
+# from classes.builder import Builder
 
-Builder().run()
+# Builder().run()
+
+from classes.supernova import Supernova
+
+Supernova().run()

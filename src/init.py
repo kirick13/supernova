@@ -5,7 +5,7 @@ from modules.env_template import use_env_vars
 
 hooks = []
 
-with open('/etc/supernova/config.yml', 'r+') as stream:
+with open('/etc/supernova/config.yml', 'r') as stream:
 	config = yaml.safe_load(stream)
 
 	for name, data in config['notifications'].items():
@@ -14,6 +14,8 @@ with open('/etc/supernova/config.yml', 'r+') as stream:
 			data['bot_token'] = use_env_vars(data['bot_token'])
 
 	for name, data in config['repos'].items():
+		repo = data['repo']
+
 		hook = {
 			'id': name,
 			'execute-command': 'python3',
@@ -32,12 +34,12 @@ with open('/etc/supernova/config.yml', 'r+') as stream:
 				{
 					'envname': 'SUPERNOVA_GIT_URL',
 					'source': 'string',
-					'name': data['url'],
+					'name': repo['url'],
 				},
 				{
 					'envname': 'SUPERNOVA_GIT_BRANCH',
 					'source': 'string',
-					'name': data['branch'] if ('branch' in data) else 'main',
+					'name': repo['branch'] if ('branch' in repo) else 'main',
 				},
 			],
 		}
@@ -60,6 +62,16 @@ with open('/etc/supernova/config.yml', 'r+') as stream:
 				'envname': 'SUPERNOVA_STEPS',
 				'source': 'string',
 				'name': json.dumps(data['steps']),
+			})
+
+		if 'token' in repo:
+			username = use_env_vars(repo['username']) if ('username' in repo) else 'user'
+			token = use_env_vars(repo['token'])
+
+			hook['pass-environment-to-command'].append({
+				'envname': 'SUPERNOVA_GIT_TOKEN',
+				'source': 'string',
+				'name': '{}:{}'.format(username, token),
 			})
 
 		if 'notify' in data:
