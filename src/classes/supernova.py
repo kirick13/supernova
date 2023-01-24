@@ -31,11 +31,12 @@ class Supernova:
 		self.logger.increase_indent()
 
 		self.name = ''
+		self.display_name = None
 		self.git_url = ''
 		self.git_url_hostname = ''
 		self.git_branch = ''
 		self.git_token = ''
-		self.steps = None
+		self.steps = []
 		self.notifications_credentials = None
 		self.env = {}
 
@@ -43,6 +44,8 @@ class Supernova:
 			if key == 'SUPERNOVA_NAME':
 				self.name = value
 				self.logger.repo_name = value
+			elif key == 'SUPERNOVA_DISPLAY_NAME':
+				self.display_name = value
 			elif key == 'SUPERNOVA_GIT_URL':
 				self.git_url = value
 				self.git_url_hostname = urlparse(value).hostname
@@ -58,6 +61,7 @@ class Supernova:
 				self.env[key] = value
 
 		self.logger.log('name:', self.name)
+		self.logger.log('display name:', self.display_name)
 		self.logger.log('git_url:', self.git_url)
 		self.logger.log('git_branch:', self.git_branch)
 		self.logger.log('steps:', self.steps)
@@ -92,13 +96,16 @@ class Supernova:
 		self.logger.decrease_indent()
 
 	def run(self):
-		self._run_init()
-		self._run_repo()
-		self._run_local()
+		try:
+			self._run_init()
+			self._run_repo()
+			self._run_local()
+		except:
+			pass
 
 		self._cleanup()
 
-		self.logger.end()
+		self.logger.end(is_ended = True)
 
 	def _run_init(self):
 		self.logger.log('[PIPELINE STAGE] Init')
@@ -109,7 +116,16 @@ class Supernova:
 			restricted = False,
 			volumes_readonly = False,
 		).run(STEPS_INIT)
-		self.config_repo = yaml.safe_load(value)
+		self.logger.log('value:', value)
+
+		self.config_repo = {
+			'steps': [],
+		}
+		if value is not None and len(value) > 0:
+			try:
+				self.config_repo = yaml.safe_load(value)
+			except:
+				raise Exception('Invalid config file found at the root of the repository.')
 
 		self.logger.decrease_indent()
 

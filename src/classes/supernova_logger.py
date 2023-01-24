@@ -1,5 +1,5 @@
 
-import sys, random
+import os, sys, random
 
 from modules.notification import send_notification
 
@@ -15,8 +15,10 @@ class SupernovaLogger:
 
 		self.indent = 0
 
-	def log (self, *args):
-		if self.indent > 0:
+		self.exit_code = None
+
+	def log (self, *args, no_indent = False):
+		if self.indent > 0 and no_indent == False:
 			args = (
 				' '.join('=>' for _ in range(self.indent)),
 				# '=> ' * self.indent,
@@ -25,9 +27,10 @@ class SupernovaLogger:
 
 		print(*args)
 
-		self.file.write(
-			' '.join(str(el) for el in args) + '\n',
-		)
+		if self.exit_code is None:
+			self.file.write(
+				' '.join(str(el) for el in args) + '\n',
+			)
 
 	def increase_indent(self):
 		self.indent += 1
@@ -35,12 +38,20 @@ class SupernovaLogger:
 	def decrease_indent(self):
 		self.indent -= 1
 
-	def end (self, exit_code = 0):
-		self.file.close()
-		send_notification(
-			exit_code = exit_code,
-			log_file_name = self.file_name,
-			repo_name = self.supernova.name,
-			credentials = self.supernova.notifications_credentials,
-		)
-		sys.exit(exit_code)
+	def end (self, exit_code = 0, is_ended = False):
+		if self.exit_code is None:
+			self.exit_code = exit_code
+
+			self.file.close()
+			send_notification(
+				exit_code = exit_code,
+				log_file_name = self.file_name,
+				repo_display_name = self.supernova.name if self.supernova.display_name is None else self.supernova.display_name,
+				credentials = self.supernova.notifications_credentials,
+			)
+
+			self.log(f'[EXIT] Process ended with code {exit_code}.', no_indent = True)
+			self.log('[EXIT] Now waiting for cleanup.', no_indent = True)
+		elif is_ended:
+			os.remove(self.file_name)
+			sys.exit(self.exit_code)

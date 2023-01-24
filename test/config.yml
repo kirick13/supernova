@@ -1,0 +1,31 @@
+
+repos:
+
+  passed:
+    display_name: supernova test (passing)
+    repo:
+      url: https://github.com/kirick13/supernova.git
+    secret: deadbeef
+    steps:
+      - name: Test
+        commands:
+          - echo 1
+    notify: telegram
+
+  failed:
+    display_name: supernova test (failing)
+    repo:
+      url: https://github.com/kirick13/supernova.git
+    secret: deadbeef
+    steps:
+      - name: Test
+        commands:
+          - exit 1
+    notify: telegram
+
+notifications:
+
+  telegram:
+    type: telegram
+    chat_id: '${TELEGRAM_CHAT_ID}'
+    bot_token: '${TELEGRAM_BOT_TOKEN}'

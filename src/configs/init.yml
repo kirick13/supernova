@@ -12,4 +12,4 @@ steps:
 
   - name: Read local Supernova config
     commands:
-      - cat supernova.config.yml
+      - cat supernova.config.yml || true

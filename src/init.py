@@ -29,7 +29,12 @@ with open('/etc/supernova/config.yml', 'r') as stream:
 				{
 					'envname': 'SUPERNOVA_NAME',
 					'source': 'string',
-					'name': name
+					'name': name,
+				},
+				{
+					'envname': 'SUPERNOVA_DISPLAY_NAME',
+					'source': 'string',
+					'name': data['display_name'],
 				},
 				{
 					'envname': 'SUPERNOVA_GIT_URL',

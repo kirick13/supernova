@@ -37,8 +37,6 @@ class SupernovaShell:
 			return return_code, stdout, stderr
 
 		except OSError as e:
-			# the program will hang if we let any exception propagate
-			# return e
 			self.logger.log(e)
 			self.logger.end(1)
 
