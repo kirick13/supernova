@@ -51,7 +51,12 @@ class SupernovaLogger:
 			)
 
 			self.log(f'[EXIT] Process ended with code {exit_code}.', no_indent = True)
-			self.log('[EXIT] Now waiting for cleanup.', no_indent = True)
-		elif is_ended:
+
+			if not is_ended:
+				self.indent = 0
+				self.log('[EXIT] Now waiting for cleanup.')
+				raise RuntimeError('')
+
+		if is_ended:
 			os.remove(self.file_name)
 			sys.exit(self.exit_code)

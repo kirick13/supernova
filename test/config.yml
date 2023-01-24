@@ -21,6 +21,11 @@ repos:
       - name: Test
         commands:
           - exit 1
+      - name: Test (SHOULD NOT BE EXECUTED)
+        commands:
+          - echo -----
+          - echo THIS IS A PROBLEM
+          - echo -----
     notify: telegram
 
 notifications:
