@@ -12,6 +12,9 @@ with open('/etc/supernova/config.yml', 'r') as stream:
 		if 'telegram' == data['type']:
 			data['chat_id'] = use_env_vars(data['chat_id'])
 			data['bot_token'] = use_env_vars(data['bot_token'])
+		elif 'discord' == data['type']:
+			data['chat_id'] = use_env_vars(data['chat_id'])
+			data['bot_token'] = use_env_vars(data['bot_token'])
 
 	for name, data in config['repos'].items():
 		repo = data['repo']
@@ -80,10 +83,22 @@ with open('/etc/supernova/config.yml', 'r') as stream:
 			})
 
 		if 'notify' in data:
+			notifiers = []
+
+			if isinstance(data['notify'], str):
+				notifiers += [
+					config['notifications'][data['notify']]
+				]
+			elif isinstance(data['notify'], list):
+				for notifier in data['notify']:
+					notifiers += [
+						config['notifications'][notifier]
+					]
+
 			hook['pass-environment-to-command'].append({
-				'envname': 'SUPERNOVA_NOTIFICATIONS',
+				'envname': 'SUPERNOVA_NOTIFIERS',
 				'source': 'string',
-				'name': json.dumps(config['notifications'][data['notify']]),
+				'name': json.dumps(notifiers),
 			})
 
 		if 'env' in data:

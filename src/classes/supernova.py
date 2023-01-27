@@ -37,7 +37,7 @@ class Supernova:
 		self.git_branch = ''
 		self.git_token = ''
 		self.steps = []
-		self.notifications_credentials = None
+		self.notifiers = None
 		self.env = {}
 
 		for key, value in os.environ.items():
@@ -55,8 +55,8 @@ class Supernova:
 				self.steps = json.loads(value)
 			elif key == 'SUPERNOVA_GIT_TOKEN':
 				self.git_token = value
-			elif key == 'SUPERNOVA_NOTIFICATIONS':
-				self.notifications_credentials = json.loads(value)
+			elif key == 'SUPERNOVA_NOTIFIERS':
+				self.notifiers = json.loads(value)
 			elif key.startswith('SUPERNOVA_'):
 				self.env[key] = value
 

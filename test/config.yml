@@ -10,7 +10,9 @@ repos:
       - name: Test
         commands:
           - echo 1
-    notify: telegram
+    notify:
+      - telegram
+      - discord
 
   failed:
     display_name: supernova test (failing)
@@ -26,11 +28,20 @@ repos:
           - echo -----
           - echo THIS IS A PROBLEM
           - echo -----
-    notify: telegram
+    notify:
+      - telegram
+      - discord
 
 notifications:
 
   telegram:
     type: telegram
+    logs: true
     chat_id: '${TELEGRAM_CHAT_ID}'
     bot_token: '${TELEGRAM_BOT_TOKEN}'
+
+  discord:
+    type: discord
+    logs: false
+    chat_id: '${DISCORD_CHAT_ID}'
+    bot_token: '${DISCORD_BOT_TOKEN}'

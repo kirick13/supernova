@@ -8,9 +8,9 @@ def _call_method (method, bot_token, data = None, files = None):
 		files = files,
 	)
 
-def send (credentials = None, text = None, log_file_name = None):
-	chat_id = credentials['chat_id']
-	bot_token = credentials['bot_token']
+def send (notifier = None, text = None, log_file_name = None):
+	chat_id = notifier['chat_id']
+	bot_token = notifier['bot_token']
 
 	response = _call_method(
 		'sendMessage',

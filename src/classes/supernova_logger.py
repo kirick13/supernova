@@ -21,7 +21,6 @@ class SupernovaLogger:
 		if self.indent > 0 and no_indent == False:
 			args = (
 				' '.join('=>' for _ in range(self.indent)),
-				# '=> ' * self.indent,
 				*args,
 			)
 
@@ -47,7 +46,7 @@ class SupernovaLogger:
 				exit_code = exit_code,
 				log_file_name = self.file_name,
 				repo_display_name = self.supernova.name if self.supernova.display_name is None else self.supernova.display_name,
-				credentials = self.supernova.notifications_credentials,
+				notifiers = self.supernova.notifiers,
 			)
 
 			self.log(f'[EXIT] Process ended with code {exit_code}.', no_indent = True)
