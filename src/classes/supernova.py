@@ -6,7 +6,10 @@ from .supernova_runner import SupernovaRunner
 from .supernova_logger import SupernovaLogger
 from .supernova_shell import SupernovaShell
 
-STEPS_INIT = yaml.safe_load(open('/supernova/configs/init.yml', 'r'))['steps']
+from modules.host_mounts import get_repos_host_path
+
+with open('/supernova/configs/init.yml', 'r') as f:
+	STEPS_INIT = yaml.safe_load(f)['steps']
 
 class Supernova:
 	def __init__ (self):
@@ -21,7 +24,6 @@ class Supernova:
 
 		self.NAME_HASH = hashlib.sha256(self.name.encode('utf-8')).hexdigest()[:16]
 
-		self.DOCKER_VOLUME_REPO = f'supernova-{ self.NAME_HASH }-repo'
 		self.DOCKER_VOLUME_TMP = f'supernova-{ self.NAME_HASH }-tmp'
 
 		self._prepare_volumes()
@@ -32,10 +34,11 @@ class Supernova:
 
 		self.name = ''
 		self.display_name = None
-		self.git_url = ''
-		self.git_url_hostname = ''
-		self.git_branch = ''
-		self.git_token = ''
+		self.git_url: str = ''
+		self.git_url_hostname: str = ''
+		self.git_branch: str = ''
+		self.git_token: str = ''
+		self.docker_images_allowed = set()
 		self.steps = []
 		self.notifiers = None
 		self.env = {}
@@ -48,17 +51,26 @@ class Supernova:
 				self.display_name = value
 			elif key == 'SUPERNOVA_GIT_URL':
 				self.git_url = value
-				self.git_url_hostname = urlparse(value).hostname
+				self.git_url_hostname = urlparse(value).hostname or ''
 			elif key == 'SUPERNOVA_GIT_BRANCH':
 				self.git_branch = value
+			elif key == 'SUPERNOVA_DOCKER_ALLOWED_IMAGES':
+				self.docker_images_allowed = set(json.loads(value))
 			elif key == 'SUPERNOVA_STEPS':
 				self.steps = json.loads(value)
 			elif key == 'SUPERNOVA_GIT_TOKEN':
 				self.git_token = value
 			elif key == 'SUPERNOVA_NOTIFIERS':
 				self.notifiers = json.loads(value)
+			elif key.startswith('SUPERNOVA_EXTRA_'):
+				self.env[key.replace('SUPERNOVA_EXTRA_', 'SUPERNOVA_')] = value
 			elif key.startswith('SUPERNOVA_'):
-				self.env[key] = value
+				raise Exception(f'Unknown environment variable: { key }')
+
+		self.host_path_repo = os.path.join(
+			get_repos_host_path(),
+			self.name,
+		)
 
 		self.logger.log('name:', self.name)
 		self.logger.log('display name:', self.display_name)
@@ -72,16 +84,6 @@ class Supernova:
 	def _prepare_volumes(self):
 		self.logger.log('[INIT] Create docker volumes')
 		self.logger.increase_indent()
-
-		self.shell(
-			[
-				'docker',
-				'volume',
-				'create',
-				self.DOCKER_VOLUME_REPO,
-			],
-			noerror = True,
-		)
 
 		self.shell(
 			[

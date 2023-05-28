@@ -1,4 +1,5 @@
 
 .DS_Store
-data
-etc
+supernova-dev
+supernova-dev/repos/**
+!supernova-dev/repos/README

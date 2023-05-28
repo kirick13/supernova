@@ -10,6 +10,8 @@ class SupernovaLogger:
 	def __init__ (self, supernova):
 		self.supernova = supernova
 
+		self.repo_name = ''
+
 		self.file_name = f'/tmp/{ random_string() }.log.txt'
 		self.file = open(self.file_name, 'w')
 

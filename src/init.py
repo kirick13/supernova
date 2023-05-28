@@ -1,5 +1,5 @@
 
-import json, yaml
+import json, os, yaml
 
 from modules.env_template import use_env_vars
 
@@ -19,10 +19,24 @@ with open('/etc/supernova/config.yml', 'r') as stream:
 	for name, data in config['repos'].items():
 		repo = data['repo']
 
+		os.makedirs(
+			os.path.join(
+				'/var/supernova/repos',
+				name,
+			),
+			exist_ok=True,
+		)
+
 		hook = {
 			'id': name,
 			'execute-command': 'python3',
 			'pass-arguments-to-command': [
+				# Add -u flag to python in order to have unbuffered stdout
+				# (https://stackoverflow.com/questions/42223834/docker-stucks-when-executing-time-sleep1-in-a-python-loop)
+				{
+					'source': 'string',
+					'name': '-u',
+				},
 				{
 					'source': 'string',
 					'name': '/supernova/onhook.py',
@@ -65,6 +79,16 @@ with open('/etc/supernova/config.yml', 'r') as stream:
 			}
 			hook['trigger-rule-mismatch-http-response-code'] = 403
 
+		if 'docker' in data:
+			data_docker = data['docker']
+
+			if 'images_allowed' in data_docker:
+				hook['pass-environment-to-command'].append({
+					'envname': 'SUPERNOVA_DOCKER_ALLOWED_IMAGES',
+					'source': 'string',
+					'name': json.dumps(data_docker['images_allowed']),
+				})
+
 		if 'steps' in data:
 			hook['pass-environment-to-command'].append({
 				'envname': 'SUPERNOVA_STEPS',
@@ -104,7 +128,7 @@ with open('/etc/supernova/config.yml', 'r') as stream:
 		if 'env' in data:
 			for key, value in data['env'].items():
 				hook['pass-environment-to-command'].append({
-					'envname': 'SUPERNOVA_' + key,
+					'envname': 'SUPERNOVA_EXTRA_' + key,
 					'source': 'string',
 					'name': value,
 				})
