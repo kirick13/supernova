@@ -14,8 +14,9 @@ cd $SCRIPT_DIR
 docker run --rm \
            --name supernova-test \
            -p 9000:9000 \
-           --env-file $HOME/+vault/@me/supernova-tests/env \
+           --env-file $HOME/+vault/Public/supernova/env \
            -v $SCRIPT_DIR/config.yml:/etc/supernova/config.yml:ro \
+           -v $SCRIPT_DIR/.repos:/var/supernova/repos \
            -v /var/run/docker.sock:/var/run/docker.sock \
            $DOCKER_IMAGE
 

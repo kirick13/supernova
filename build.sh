@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DOCKER_IMAGE='kirickme/supernova'
-DOCKER_TAG='0.4.0'
+DOCKER_TAG='0.5.1-dev'
 
 docker manifest inspect $DOCKER_IMAGE:$DOCKER_TAG >/dev/null 2>&1
 if [ $? -ne 0 ]; then
@@ -10,7 +10,6 @@ if [ $? -ne 0 ]; then
     docker buildx build --push \
                         --platform linux/amd64,linux/arm64 \
                         --tag $DOCKER_IMAGE:$DOCKER_TAG \
-                        --tag $DOCKER_IMAGE:latest \
                         .
 else
     echo 'Image '$DOCKER_IMAGE:$DOCKER_TAG' already exists, building aborted.'

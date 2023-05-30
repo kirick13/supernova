@@ -210,7 +210,7 @@ class SupernovaRunnerStep:
 			self._get_commands(),
 		])
 
-		self.supernova_runner.logger.log('Running:', shlex.join(docker_command))
+		# self.supernova_runner.logger.log('Running:', shlex.join(docker_command))
 		return_code, stdout, stderr = self.supernova_runner.shell(docker_command)
 
 		self.supernova_runner.logger.decrease_indent()
