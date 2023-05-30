@@ -41,7 +41,7 @@ def get_repos_host_path() -> str:
 
 		if 'Mounts' in info['HostConfig']:
 			for mount in info['HostConfig']['Mounts']:
-				if mount['Type'] == 'bind' and mount['Destination'] == '/var/supernova/repos':
+				if mount['Type'] == 'bind' and mount['Target'] == '/var/supernova/repos':
 					_repos_host_path = mount['Source']
 					break
 		elif 'Binds' in info['HostConfig']:
