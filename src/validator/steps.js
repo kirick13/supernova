@@ -61,6 +61,27 @@ export default createValidator({
 				optional: true,
 				validator: (value) => value.length > 0,
 			},
+			bind: {
+				type: Array,
+				optional: true,
+				values: {
+					type: Object,
+					entries: {
+						source: {
+							type: String,
+							validator: (value) => value.length > 0,
+						},
+						target: {
+							type: String,
+							validator: (value) => value.length > 0,
+						},
+						readonly: {
+							type: Boolean,
+							default: false,
+						},
+					},
+				},
+			},
 			container: {
 				type: String,
 				optional: true,
@@ -92,6 +113,7 @@ export default createValidator({
 		contentValidator(value) {
 			if (isPlainObject(value.docker)) {
 				return value.image === null
+					&& value.bind === null
 					&& value.container === null
 					&& value.commands === null;
 			}
@@ -103,7 +125,8 @@ export default createValidator({
 
 			if (value.container !== null) {
 				return value.docker === null
-					&& value.image === null;
+					&& value.image === null
+					&& value.bind === null;
 			}
 
 			return value.commands !== null;

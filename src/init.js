@@ -112,7 +112,7 @@ for (const [ project_name, project ] of Object.entries(config.projects)) {
 	hook_env.push({
 		envname: 'SUPERNOVA_STEPS',
 		source: 'string',
-		name: JSON.stringify(project.steps),
+		name: btoa(JSON.stringify(project.steps)),
 	});
 
 	{

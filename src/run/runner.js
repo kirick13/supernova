@@ -69,7 +69,9 @@ export default async function (steps, access_level) {
 	}
 
 	function getEnvironment() {
-		const env = {};
+		const env = {
+			NAME: ARGS.name,
+		};
 
 		if (access_level >= ACCESS_LEVEL.SYSTEM) {
 			Object.assign(
@@ -130,6 +132,20 @@ export default async function (steps, access_level) {
 				});
 			}
 
+			if (Array.isArray(step.bind)) {
+				if (access_level < ACCESS_LEVEL.ADMIN) {
+					throw new Error('You have not access to binding files and directories.');
+				}
+
+				for (const { source, target, readonly } of step.bind) {
+					mounts.push({
+						source: replaceVariables(source, ENV_RUNTIME, ARGS.extra_env, process.env),
+						target: replaceVariables(target, ENV_RUNTIME, ARGS.extra_env, process.env),
+						readonly,
+					});
+				}
+			}
+
 			return mounts;
 		};
 
@@ -160,7 +176,6 @@ export default async function (steps, access_level) {
 			main_command.push(
 				'run',
 				'--rm',
-				// *[ a for mount in self._get_mounts() for a in ('--mount', mount) ],
 				...mounts2CommandArguments(
 					getMounts(),
 				),

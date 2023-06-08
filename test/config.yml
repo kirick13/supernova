@@ -3,7 +3,7 @@ projects:
 
   passed:
     displayName: supernova test (passing)
-    webhookSecret: deadbeef
+    webhookSecret: $WEBHOOK_SECRET
     repo:
       url: https://github.com/kirick13/supernova.git
     steps:
@@ -16,7 +16,7 @@ projects:
 
   failed:
     displayName: supernova test (failing)
-    webhookSecret: deadbeef
+    webhookSecret: $WEBHOOK_SECRET
     repo:
       url: https://github.com/kirick13/supernova.git
     steps:
@@ -28,6 +28,22 @@ projects:
           - echo -----
           - echo THIS IS A PROBLEM
           - echo -----
+    notify:
+      - telegram
+      - discord
+
+  read_host_file:
+    displayName: supernova read file on host
+    webhookSecret: $WEBHOOK_SECRET
+    repo:
+      url: https://github.com/kirick13/supernova.git
+    steps:
+      - name: Read file
+        bind:
+          - source: $SUPERNOVA_PATH/test/hello-world.txt
+            target: /tmp/hello-world.txt
+        commands:
+          - cat /tmp/hello-world.txt
     notify:
       - telegram
       - discord

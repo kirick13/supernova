@@ -1,4 +1,6 @@
 
+console.log();
+
 import { join as joinPath } from 'node:path';
 
 import { SupernovaConfigNotExistsError,
@@ -13,8 +15,6 @@ import runSteps,
        { ACCESS_LEVEL }                 from './run/runner.js';
 import { SubprocessError }              from './run/shell.js';
 import { readSteps }                    from './utils.js';
-
-console.log();
 
 let exit_code = 0;
 

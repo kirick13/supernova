@@ -19,6 +19,8 @@ export const docker = {
 	login: JSON.parse(process.env.SUPERNOVA_DOCKER_LOGIN ?? 'null'),
 };
 
-export const steps = JSON.parse(process.env.SUPERNOVA_STEPS ?? '[]');
+export const steps = JSON.parse(
+	atob(process.env.SUPERNOVA_STEPS),
+);
 
 export const notifiers = JSON.parse(process.env.SUPERNOVA_NOTIFIERS ?? '[]');

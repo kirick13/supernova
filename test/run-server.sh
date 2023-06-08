@@ -17,7 +17,7 @@ docker run --rm \
            --name supernova-test \
            -p 48214:9000 \
            -e SUPERNOVA_DEBUG=1 \
-           --env-file $HOME/+vault/Public/supernova/env \
+           --env-file $HOME/+vault/local/supernova-test/env \
            -v $SCRIPT_DIR/config.yml:/etc/supernova/config.yml:ro \
            -v $SCRIPT_DIR/.repos:/var/supernova/repos \
            -v /var/run/docker.sock:/var/run/docker.sock \
