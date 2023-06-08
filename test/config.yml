@@ -1,11 +1,11 @@
 
-repos:
+projects:
 
   passed:
-    display_name: supernova test (passing)
+    displayName: supernova test (passing)
+    webhookSecret: deadbeef
     repo:
       url: https://github.com/kirick13/supernova.git
-    secret: deadbeef
     steps:
       - name: Test
         commands:
@@ -15,10 +15,10 @@ repos:
       - discord
 
   failed:
-    display_name: supernova test (failing)
+    displayName: supernova test (failing)
+    webhookSecret: deadbeef
     repo:
       url: https://github.com/kirick13/supernova.git
-    secret: deadbeef
     steps:
       - name: Test
         commands:
@@ -37,11 +37,11 @@ notifications:
   telegram:
     type: telegram
     logs: true
-    chat_id: '${TELEGRAM_CHAT_ID}'
-    bot_token: '${TELEGRAM_BOT_TOKEN}'
+    chat_id: $TELEGRAM_CHAT_ID
+    bot_token: $TELEGRAM_BOT_TOKEN
 
   discord:
     type: discord
     logs: false
-    chat_id: '${DISCORD_CHAT_ID}'
-    bot_token: '${DISCORD_BOT_TOKEN}'
+    chat_id: $DISCORD_CHAT_ID
+    bot_token: $DISCORD_BOT_TOKEN

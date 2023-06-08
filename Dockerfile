@@ -1,15 +1,16 @@
 
-FROM		golang:1.19.4-alpine AS golang
-RUN			go install github.com/adnanh/webhook@2.8.0
+FROM       golang:1.19.4 AS golang
+RUN        go install github.com/adnanh/webhook@2.8.0
 
-FROM		docker:20.10.22-alpine3.17 AS docker
+FROM       docker:20.10.22 AS docker
 
-FROM		python:3.11.1-alpine AS python
-COPY		--from=golang /go/bin/webhook /bin/webhook
-COPY		--from=docker /usr/local/bin/docker /bin/docker
-RUN			python3 -m pip install pyyaml requests \
-			&& mkdir -p /supernova
-EXPOSE		9000
-WORKDIR		/supernova
-COPY		./src .
-ENTRYPOINT	[ "/bin/sh", "-c", "python3 init.py && webhook -debug -verbose -urlprefix webhook" ]
+FROM       oven/bun:0.6.7
+COPY       --from=golang /go/bin/webhook /usr/local/bin/webhook
+COPY       --from=docker /usr/local/bin/docker /usr/local/bin/docker
+RUN        mkdir -p /app
+WORKDIR    /app
+COPY       ./src .
+COPY       ./docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN        bun install --production
+EXPOSE     9000
+ENTRYPOINT [ "docker-entrypoint.sh" ]

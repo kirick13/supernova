@@ -1,15 +1,12 @@
 
 steps:
-
   - name: Clone/pull git repository
     image: simplepackages/git
     commands:
-      - echo '[url "https://'$SUPERNOVA_GIT_TOKEN'@'$SUPERNOVA_GIT_URL_HOSTNAME'"]' > ~/.gitconfig
-      - echo 'InsteadOf = https://'$SUPERNOVA_GIT_URL_HOSTNAME >> ~/.gitconfig
-      - git clone $SUPERNOVA_GIT_URL . || true
-      - git checkout $SUPERNOVA_GIT_BRANCH
+      - echo '[url "https://'$GIT_TOKEN'@'$GIT_URL_HOSTNAME'"]' > ~/.gitconfig
+      - echo 'InsteadOf = https://'$GIT_URL_HOSTNAME >> ~/.gitconfig
+      - git clone $GIT_URL . || true
+      - git checkout $GIT_BRANCH
       - git pull
-
-  - name: Read local Supernova config
-    commands:
-      - cat supernova.config.yml || true
+      - GIT_COMMIT: git rev-parse HEAD
+      - GIT_COMMIT_SHORT: git rev-parse --short HEAD

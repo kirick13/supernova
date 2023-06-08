@@ -1,10 +1,5 @@
 
-.DS_Store
-
-_src
-supernova-dev
-.repos
-
+src/.eslintrc*
 src/backup_node_modules
 src/node_modules
 src/package-lock.json

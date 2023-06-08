@@ -5,15 +5,18 @@ normalpath () {
 }
 
 SCRIPT_DIR=$(normalpath $(dirname $0))
-DOCKER_IMAGE='local/supernova:latest'
+DOCKER_IMAGE='local/supernova'
 
 cd $SCRIPT_DIR/..
 docker build -t $DOCKER_IMAGE .
 
 cd $SCRIPT_DIR
 docker run --rm \
+           --interactive \
+           --tty \
            --name supernova-test \
-           -p 9000:9000 \
+           -p 48214:9000 \
+           -e SUPERNOVA_DEBUG=1 \
            --env-file $HOME/+vault/Public/supernova/env \
            -v $SCRIPT_DIR/config.yml:/etc/supernova/config.yml:ro \
            -v $SCRIPT_DIR/.repos:/var/supernova/repos \
