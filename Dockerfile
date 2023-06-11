@@ -2,7 +2,7 @@
 FROM       golang:1.19.4 AS golang
 RUN        go install github.com/adnanh/webhook@2.8.0
 
-FROM       docker:20.10.22 AS docker
+FROM       docker:24.0 AS docker
 
 FROM       oven/bun:0.6.7
 COPY       --from=golang /go/bin/webhook /usr/local/bin/webhook

@@ -48,6 +48,25 @@ projects:
       - telegram
       - discord
 
+  env_variables:
+    displayName: supernova env variables
+    webhookSecret: $WEBHOOK_SECRET
+    repo:
+      url: https://github.com/kirick13/supernova.git
+    env:
+      TEST_ENV: Hello world
+    steps:
+      - name: Variable inside container
+        commands:
+          - echo $TEST_ENV
+      - name: Variable inside container
+        container: supernova-test
+        commands:
+          - echo $TEST_ENV
+    notify:
+      - telegram
+      - discord
+
 notifications:
 
   telegram:

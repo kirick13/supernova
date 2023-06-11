@@ -96,7 +96,7 @@ export default async function (steps, access_level) {
 			}
 
 			if (step.docker !== null) {
-				return 'docker:20.10.22-alpine3.17';
+				return 'docker:24.0.2-alpine3.18';
 			}
 
 			return 'busybox:stable';
@@ -154,6 +154,10 @@ export default async function (steps, access_level) {
 
 		const container_commands = [];
 
+		const env_as_args = environment2CommandArguments(
+			getEnvironment(),
+		);
+
 		// exec in local container
 		if (step.container !== null) { // eslint-disable-line unicorn/no-negated-condition
 			if (access_level < ACCESS_LEVEL.ADMIN) {
@@ -164,6 +168,7 @@ export default async function (steps, access_level) {
 
 			main_command.push(
 				'exec',
+				...env_as_args,
 				step.container,
 				'/bin/sh',
 			);
@@ -179,9 +184,7 @@ export default async function (steps, access_level) {
 				...mounts2CommandArguments(
 					getMounts(),
 				),
-				...environment2CommandArguments(
-					getEnvironment(),
-				),
+				...env_as_args,
 				'--workdir',
 				'/opt/supernova', // TODO: custom workdir in step
 				'--entrypoint',
@@ -225,7 +228,6 @@ export default async function (steps, access_level) {
 					container_command_this.push(
 						'buildx',
 						'build',
-						'--push',
 						'--platform',
 						platforms.join(','),
 					);
@@ -233,6 +235,8 @@ export default async function (steps, access_level) {
 				else {
 					container_command_this.push('build');
 				}
+
+				container_command_this.push('--push');
 
 				if (file !== null) {
 					container_command_this.push(
