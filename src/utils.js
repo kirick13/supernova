@@ -1,9 +1,11 @@
 
-import YAML from 'yaml';
+import { mkdir } from 'node:fs/promises';
+import YAML      from 'yaml';
 
 import { SupernovaConfigNotExistsError,
          SupernovaInvalidConfigError  } from './errors.js';
 import validateConfig                   from './validator/main.js';
+import projectValidator                 from './validator/project.js';
 import stepsValidator                   from './validator/steps.js';
 
 export function isPlainObject(value) {
@@ -44,6 +46,17 @@ export async function readConfig(path) {
 	}
 }
 
+export async function readProject(path) {
+	const config = await parseYamlFile(path);
+
+	try {
+		return projectValidator.cast(config);
+	}
+	catch {
+		throw new SupernovaInvalidConfigError(path);
+	}
+}
+
 export async function readSteps(path) {
 	const config = await parseYamlFile(path);
 
@@ -52,6 +65,20 @@ export async function readSteps(path) {
 	}
 	catch {
 		throw new SupernovaInvalidConfigError(path);
+	}
+}
+
+export async function createProjectDirectory(project_name) {
+	try {
+		await mkdir(
+			'/var/supernova/repos/' + project_name,
+			{ recursive: true },
+		);
+	}
+	catch (error) {
+		if (error.code !== 'EEXIST') {
+			throw error;
+		}
 	}
 }
 

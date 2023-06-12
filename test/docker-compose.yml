@@ -4,20 +4,21 @@ version: '3.7'
 services:
   supernova-dev:
     container_name: supernova-dev
-    build: .
+    build: ../
     environment:
       SUPERNOVA_DEBUG: true
-    env_file:
-      # - ~/+vault/local/supernova/env
-      - ~/+vault/@me/git-ci/env/supernova.env
+      WEBHOOK_SECRET: deadbeef
     volumes:
       - type: bind
-        # source: ./supernova-dev/config.yml
-        source: ~/Development/@me/up/git-ci/src/supernova/config.yml
+        source: ./config.yml
         target: /etc/supernova/config.yml
         read_only: true
       - type: bind
-        source: ./supernova-dev/repos
+        source: ./projects
+        target: /etc/supernova/projects
+        read_only: true
+      - type: bind
+        source: ./.repos
         target: /var/supernova/repos
       - type: bind
         source: /var/run/docker.sock

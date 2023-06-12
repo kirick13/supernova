@@ -1,5 +1,6 @@
 
-import { createObjectValidator } from 'oh-my-props';
+import { createMultiTypeValidator,
+         createObjectValidator   } from 'oh-my-props';
 
 import { NAME_REGEXP }  from '../consts.js';
 import validatorProject from '../validator/project.js';
@@ -11,7 +12,13 @@ const configValidator = createObjectValidator({
 			type: String,
 			validator: (value) => NAME_REGEXP.test(value),
 		},
-		values: validatorProject,
+		values: createMultiTypeValidator(
+			{
+				type: String,
+				validator: (value) => value.length > 0,
+			},
+			validatorProject,
+		),
 	},
 	notifications: {
 		type: Object,
