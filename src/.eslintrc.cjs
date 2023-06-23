@@ -48,6 +48,12 @@ module.exports = {
 		],
 		'camelcase': 'off',
 		'capitalized-comments': 'off',
+		'complexity': [
+			'warn',
+			{
+				max: 23,
+			},
+		],
 		'indent': [
 			'error',
 			'tab',
@@ -58,6 +64,12 @@ module.exports = {
 				],
 				ImportDeclaration: 'off',
 				SwitchCase: 1,
+			},
+		],
+		'max-depth': [
+			'warn',
+			{
+				max: 5,
 			},
 		],
 		'no-multi-spaces': [

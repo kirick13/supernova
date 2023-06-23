@@ -1,6 +1,18 @@
 
+import { mkdir } from 'node:fs/promises';
+
 import { HTTPError } from './errors.js';
 import hooks         from './hooks.js';
+
+const SUPERNOVA_TOKEN = Array.from({ length: 6 }).fill(0).map(() => Math.random().toString(36).slice(-7)).join('');
+await mkdir(
+	'/var/run/supernova',
+	{ recursive: true },
+);
+await Bun.write(
+	'/var/run/supernova/token.txt',
+	SUPERNOVA_TOKEN,
+);
 
 Bun.serve({
 	development: false,
@@ -15,12 +27,62 @@ Bun.serve({
 
 			const project = hooks.get(url.pathname);
 
+			const supernova_token = request.headers.get('X-Supernova-Token');
+			if (typeof supernova_token === 'string') {
+				if (supernova_token !== SUPERNOVA_TOKEN) {
+					throw new HTTPError(403, 'Supernova token mismatch');
+				}
+			}
+			else {
+				if (url.searchParams.get('check_branch') === 'true') {
+					if (request.headers.get('X-GitHub-Event') !== 'push') {
+						throw new HTTPError(400, 'Unsupported event name');
+					}
+
+					if (request.method !== 'POST') {
+						throw new HTTPError(405, 'Method not allowed');
+					}
+
+					let body;
+					switch (request.headers.get('Content-Type')) {
+						case 'application/json':
+							body = await request.json();
+							break;
+						case 'application/x-www-form-urlencoded':
+							body = Object.fromEntries(
+								new URLSearchParams(
+									await request.text(),
+								),
+							);
+							break;
+						default:
+							throw new HTTPError(415, 'Unsupported media type');
+					}
+
+					if (typeof body.ref !== 'string') {
+						throw new HTTPError(400, 'Invalid ref value');
+					}
+
+					if (body.ref.split('/').pop() !== project.repo.branch) {
+						return new Response(
+							'Accepted',
+							{
+								status: 202,
+								headers: {
+									'Content-Type': 'text/plain',
+								},
+							},
+						);
+					}
+				}
+
+				if (project.secret !== url.searchParams.get('secret')) {
+					throw new HTTPError(403, 'Webhook secret mismatch');
+				}
+			}
+
 			const pipeliner = new Pipeliner();
 			pipeliner.print(`Running webhook "${project.name}"...`);
-
-			if (project.secret !== url.searchParams.get('secret')) {
-				throw new HTTPError(403, 'Webhook secret mismatch');
-			}
 
 			execute(
 				pipeliner,
@@ -52,7 +114,7 @@ Bun.serve({
 
 console.log('Listening for webhooks...');
 
-async function execute(pipeline, project) {
+async function execute(pipeliner, project) {
 	const proc = Bun.spawn(
 		[
 			'bun',
@@ -62,6 +124,7 @@ async function execute(pipeline, project) {
 		{
 			env: {
 				...process.env,
+				SUPERNOVA_RUN_ID: pipeliner.run_id,
 				...project.env,
 			},
 			stdout: 'pipe',
@@ -69,14 +132,19 @@ async function execute(pipeline, project) {
 		},
 	);
 
-	pipeline.attach(proc.stdout);
-	pipeline.attach(proc.stderr);
+	pipeliner.attach(proc.stdout);
+	pipeliner.attach(proc.stderr);
 
 	await proc.exited;
 }
 
 class Pipeliner {
-	#prefix = `\u001B[${Math.floor((Math.random() * 7) + 31)}m[${Math.random().toString(36).slice(-7)}]\u001B[0m `;
+	#run_id = Math.random().toString(36).slice(-7);
+	#prefix = `\u001B[${Math.floor((Math.random() * 6) + 31)}m[${this.#run_id}]\u001B[0m `;
+
+	get run_id() {
+		return this.#run_id;
+	}
 
 	print(...chunks) {
 		process.stdout.write(this.#prefix);

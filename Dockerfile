@@ -5,7 +5,8 @@ FROM       oven/bun:0.6.7
 COPY       --from=docker /usr/local/bin/docker /usr/local/bin/docker
 RUN        mkdir -p /app
 WORKDIR    /app
-COPY       ./src .
+COPY       src .
+COPY       cli.js /usr/local/bin/supernova
 RUN        bun install --production
 EXPOSE     9000
 ENTRYPOINT [ "bun", "run", "daemon.js" ]

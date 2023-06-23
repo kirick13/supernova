@@ -13,20 +13,28 @@ import { getRuntimeEnvFilename,
 import checkImageAllowed        from '../run/runner.check-images.js';
 import exec                     from '../run/shell.js';
 import { isPlainObject,
-         replaceVariables }     from '../utils.js';
+         replaceVariables,
+         checkPath       }      from '../utils.js';
 
-export const ACCESS_LEVEL = {
+const ACCESS_LEVEL = {
 	SYSTEM: 2,
 	ADMIN: 1,
 	EXTERNAL_USER: 0,
 };
 const ACCESS_LEVEL_VALUES = new Set(Object.values(ACCESS_LEVEL));
 
-const ENV_GIT = {
+const DIRECTIVE = {
+	NEXT: 0,
+	PAUSE: 1,
+};
+
+const ENV_GIT = ARGS.git.url ? {
 	GIT_URL: ARGS.git.url,
 	GIT_URL_HOSTNAME: ARGS.git.url_hostname,
 	GIT_BRANCH: ARGS.git.branch,
 	GIT_TOKEN: ARGS.git.token,
+} : {
+	GIT_PATH: ARGS.git.path,
 };
 
 const ENV_RUNTIME = {};
@@ -63,13 +71,14 @@ function mounts2CommandArguments(mounts) {
 	return result;
 }
 
-export default async function (steps, access_level) {
+async function * runSteps(steps, access_level) {
 	if (ACCESS_LEVEL_VALUES.has(access_level) === false) {
 		throw new Error(`Invalid access level: ${access_level}`);
 	}
 
 	function getEnvironment() {
 		const env = {
+			RUN_ID: ARGS.run_id,
 			NAME: ARGS.name,
 		};
 
@@ -90,6 +99,20 @@ export default async function (steps, access_level) {
 	}
 
 	for (const step of steps) {
+		if (typeof step === 'string') {
+			if (step === '/next') {
+				yield DIRECTIVE.NEXT;
+			}
+			else if (step === '/pause') {
+				yield DIRECTIVE.PAUSE;
+			}
+
+			continue;
+		}
+
+		const env = getEnvironment();
+		const env_as_args = environment2CommandArguments(env);
+
 		const getDockerImage = () => {
 			if (step.image !== null) {
 				return step.image;
@@ -105,14 +128,20 @@ export default async function (steps, access_level) {
 			const mounts = [];
 
 			mounts.push(
-				{
-					source: joinPath(
-						repos_path_on_host,
-						ARGS.name,
-					),
-					target: '/opt/supernova',
-					readonly: access_level < ACCESS_LEVEL.SYSTEM,
-				},
+				ARGS.git.url
+					? {
+						source: joinPath(
+							repos_path_on_host,
+							ARGS.name,
+						),
+						target: '/opt/supernova',
+						readonly: access_level < ACCESS_LEVEL.SYSTEM,
+					}
+					: {
+						source: ARGS.git.path,
+						target: '/opt/supernova',
+						readonly: true,
+					},
 				{
 					type: 'volume',
 					source: DOCKER_VOLUME_TMP,
@@ -139,8 +168,8 @@ export default async function (steps, access_level) {
 
 				for (const { source, target, readonly } of step.bind) {
 					mounts.push({
-						source: replaceVariables(source, ENV_RUNTIME, ARGS.extra_env, process.env),
-						target: replaceVariables(target, ENV_RUNTIME, ARGS.extra_env, process.env),
+						source: replaceVariables(source, env),
+						target: replaceVariables(target, env),
 						readonly,
 					});
 				}
@@ -153,10 +182,6 @@ export default async function (steps, access_level) {
 		let step_title;
 
 		const container_commands = [];
-
-		const env_as_args = environment2CommandArguments(
-			getEnvironment(),
-		);
 
 		// exec in local container
 		if (step.container !== null) { // eslint-disable-line unicorn/no-negated-condition
@@ -204,7 +229,11 @@ export default async function (steps, access_level) {
 						shlex.join([
 							'docker',
 							'login',
-							host,
+							...(
+								host.length > 0
+									? [ host ]
+									: []
+							),
 							'--username',
 							user,
 							'--password',
@@ -215,6 +244,7 @@ export default async function (steps, access_level) {
 
 				const {
 					file,
+					context,
 					tag,
 					platforms,
 				} = step.docker.build;
@@ -239,6 +269,10 @@ export default async function (steps, access_level) {
 				container_command_this.push('--push');
 
 				if (file !== null) {
+					if (checkPath(file) === false) {
+						throw new Error(`You can not build an image from config "${file}".`);
+					}
+
 					container_command_this.push(
 						'--file',
 						file,
@@ -249,8 +283,7 @@ export default async function (steps, access_level) {
 				{
 					const tag_to_build = replaceVariables(
 						tag,
-						ARGS.extra_env,
-						ENV_RUNTIME,
+						env,
 					);
 
 					if (
@@ -266,7 +299,10 @@ export default async function (steps, access_level) {
 					);
 				}
 
-				container_command_this.push('.');
+				if (checkPath(context) === false) {
+					throw new Error(`You can not build an image with context "${context}".`);
+				}
+				container_command_this.push(context);
 			}
 
 			container_commands.push(
@@ -281,7 +317,6 @@ export default async function (steps, access_level) {
 				throw new Error('You can not execute arbitrary docker commands.');
 			}
 
-			// container_commands.push(step.commands);
 			for (const command of step.commands) {
 				if (typeof command === 'string') {
 					container_commands.push(command);
@@ -324,4 +359,48 @@ export default async function (steps, access_level) {
 			},
 		);
 	}
+}
+
+async function runGenerators(generator, ...generators_next) {
+	for (
+		let state = await generator.next();
+		!state.done;
+		state = await generator.next()
+	) {
+		// console.log('gen level', generators_next.length, 'state', state);
+
+		if (state.value === DIRECTIVE.NEXT) {
+			if (generators_next.length === 0) {
+				throw new Error('Unexpected "@next" directive.');
+			}
+
+			await runGenerators(...generators_next);
+		}
+		else if (state.value === DIRECTIVE.PAUSE) {
+			break;
+		}
+	}
+
+	// console.log('gen level', generators_next.length, 'done');
+}
+
+export default async function (
+	steps_system,
+	steps_admin,
+	steps_external,
+) {
+	await runGenerators(
+		runSteps(
+			steps_system,
+			ACCESS_LEVEL.SYSTEM,
+		),
+		runSteps(
+			steps_admin,
+			ACCESS_LEVEL.ADMIN,
+		),
+		runSteps(
+			steps_external,
+			ACCESS_LEVEL.EXTERNAL_USER,
+		),
+	);
 }

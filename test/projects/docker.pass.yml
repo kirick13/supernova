@@ -1,0 +1,11 @@
+displayName: Docker (should pass)
+webhookSecret: deadbeef
+repo:
+  url: https://github.com/kirick13/supernova.git
+steps:
+  - name: docker build
+    docker:
+      build:
+        file: Dockerfile
+        context: ../
+        tag: local/supernova:latest

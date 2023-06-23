@@ -20,7 +20,7 @@ export default createValidator({
 			default: () => ({}),
 			keys: {
 				type: String,
-				validator: (value) => FQDN_REGEXP.test(value),
+				validator: (value) => value.length === 0 || FQDN_REGEXP.test(value),
 			},
 			values: {
 				type: Object,

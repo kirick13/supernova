@@ -10,3 +10,4 @@ steps:
       - git pull
       - GIT_COMMIT: git rev-parse HEAD
       - GIT_COMMIT_SHORT: git rev-parse --short HEAD
+  - /next

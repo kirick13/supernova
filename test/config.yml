@@ -2,7 +2,7 @@
 projects:
 
   passed:
-    displayName: supernova test (passing)
+    displayName: supernova test (should pass)
     webhookSecret: $WEBHOOK_SECRET
     repo:
       url: https://github.com/kirick13/supernova.git
@@ -15,7 +15,7 @@ projects:
       - discord
 
   failed:
-    displayName: supernova test (failing)
+    displayName: supernova test (should fail)
     webhookSecret: $WEBHOOK_SECRET
     repo:
       url: https://github.com/kirick13/supernova.git
@@ -49,6 +49,8 @@ projects:
       - discord
 
   env_variables: projects/env_variables.yml
+
+  docker_pass: projects/docker.pass.yml
 
 notifications:
 

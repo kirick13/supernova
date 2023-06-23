@@ -1,6 +1,7 @@
 
-import { mkdir } from 'node:fs/promises';
-import YAML      from 'yaml';
+import { mkdir }            from 'node:fs/promises';
+import { join as joinPath } from 'node:path';
+import YAML                 from 'yaml';
 
 import { SupernovaConfigNotExistsError,
          SupernovaInvalidConfigError  } from './errors.js';
@@ -98,6 +99,17 @@ export function replaceVariables(string, ...data) {
 	}
 
 	return string;
+}
+
+export function checkPath(subpath) {
+	const base_path = '/' + Math.random().toString(36).slice(-7);
+
+	const path = joinPath(
+		base_path,
+		subpath,
+	);
+
+	return path.startsWith(base_path);
 }
 
 async function getFormData(data, files) {

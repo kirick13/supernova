@@ -8,6 +8,7 @@ import validatorProject from '../validator/project.js';
 const configValidator = createObjectValidator({
 	projects: {
 		type: Object,
+		default: () => ({}),
 		keys: {
 			type: String,
 			validator: (value) => NAME_REGEXP.test(value),
@@ -22,6 +23,7 @@ const configValidator = createObjectValidator({
 	},
 	notifications: {
 		type: Object,
+		default: () => ({}),
 		keys: {
 			type: String,
 			validator: (value) => NAME_REGEXP.test(value),
@@ -51,5 +53,5 @@ const configValidator = createObjectValidator({
 });
 
 export default function (config) {
-	return configValidator.cast(config);
+	return configValidator.cast(config ?? {});
 }

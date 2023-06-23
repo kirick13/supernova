@@ -1,0 +1,9 @@
+
+steps:
+  - name: Use directory with git repository
+    image: simplepackages/git
+    commands:
+      - GIT_COMMIT: git rev-parse HEAD
+      - GIT_COMMIT_SHORT: git rev-parse --short HEAD
+      - echo 'Init completed.'
+  - /next

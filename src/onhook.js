@@ -11,8 +11,7 @@ import * as supernovaConsole            from './run/logger.js';
 import * as loggerFile                  from './run/logger.file.js';
 import { resetIndentation }             from './run/logger.transformer.js';
 import sendNotifications 			    from './run/notification.js';
-import runSteps,
-       { ACCESS_LEVEL }                 from './run/runner.js';
+import runSteps                         from './run/runner.js';
 import { SubprocessError }              from './run/shell.js';
 import { readSteps }                    from './utils.js';
 
@@ -30,32 +29,27 @@ try {
 
 	await dockerVolume.create();
 
-	// run init steps
-	await supernovaConsole.indent(
-		'[INIT] Run init steps',
-		async () => {
-			const steps = await readSteps('/app/configs/init.yml');
-
-			await runSteps(
-				steps,
-				ACCESS_LEVEL.SYSTEM,
-			);
-		},
+	const steps_system = await readSteps(
+		ARGS.git.url
+			? '/app/configs/init.git.clone.yml'
+			: '/app/configs/init.git.path.yml',
 	);
 
-	// run external steps
+	let steps_external = [];
 	try {
-		const steps = await readSteps(
+		steps_external = await readSteps(
 			joinPath(
-				'/var/supernova/repos',
-				ARGS.name,
+				ARGS.git.url
+					? joinPath(
+						'/var/supernova/repos',
+						ARGS.name,
+					)
+					: joinPath(
+						'/bind',
+						ARGS.git.path,
+					),
 				'supernova.config.yml',
 			),
-		);
-
-		await runSteps(
-			steps,
-			ACCESS_LEVEL.EXTERNAL_USER,
 		);
 	}
 	catch (error) {
@@ -64,13 +58,11 @@ try {
 		}
 	}
 
-	// run admin steps
-	if (ARGS.steps.length > 0) {
-		await runSteps(
-			ARGS.steps,
-			ACCESS_LEVEL.ADMIN,
-		);
-	}
+	await runSteps(
+		steps_system,
+		ARGS.steps,
+		steps_external,
+	);
 
 	supernovaConsole.log('✅ Pipeline completed successfully.');
 }

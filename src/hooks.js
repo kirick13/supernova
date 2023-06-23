@@ -39,11 +39,20 @@ for (const project_name of Object.keys(config.projects)) {
 	const hook = {
 		name: project_name,
 		secret: replaceVariables(project.webhookSecret, process.env),
+		repo: project_repo,
 		env: {
 			SUPERNOVA_NAME: project_name,
 			SUPERNOVA_DISPLAY_NAME: project.displayName,
-			SUPERNOVA_GIT_URL: project_repo.url,
-			SUPERNOVA_GIT_BRANCH: project_repo.branch,
+			...(
+				project_repo.url
+					? {
+						SUPERNOVA_GIT_URL: project_repo.url,
+						SUPERNOVA_GIT_BRANCH: project_repo.branch,
+					}
+					: {
+						SUPERNOVA_GIT_PATH: project_repo.path,
+					}
+			),
 			SUPERNOVA_ENV_EXTRA: JSON.stringify(project.env),
 			SUPERNOVA_STEPS: btoa(
 				JSON.stringify(project.steps),
@@ -77,7 +86,7 @@ for (const project_name of Object.keys(config.projects)) {
 		hook.env.SUPERNOVA_NOTIFIERS = JSON.stringify(notifiers);
 	}
 
-	if (project_repo.token !== null) {
+	if (typeof project_repo.token === 'string') {
 		const repo_user = replaceVariables(project_repo.user, process.env);
 		const repo_token = replaceVariables(project_repo.token, process.env);
 
