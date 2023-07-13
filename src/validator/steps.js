@@ -51,6 +51,18 @@ export default createValidator({
 										type: String,
 										validator: (value) => value.length > 0,
 									},
+									args: {
+										type: Object,
+										optional: true,
+										keys: {
+											type: String,
+											validator: (value) => ENV_KEY_REGEXP.test(value),
+										},
+										values: {
+											type: String,
+											validator: (value) => value.length > 0,
+										},
+									},
 									platforms: {
 										type: Array,
 										optional: true,

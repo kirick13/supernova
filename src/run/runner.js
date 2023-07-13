@@ -243,10 +243,11 @@ async function * runSteps(steps, access_level) {
 				}
 
 				const {
-					file,
-					context,
-					tag,
 					platforms,
+					file,
+					tag,
+					args,
+					context,
 				} = step.docker.build;
 
 				if (Array.isArray(platforms)) {
@@ -297,6 +298,16 @@ async function * runSteps(steps, access_level) {
 						'--tag',
 						tag_to_build,
 					);
+				}
+
+				// build args
+				if (isPlainObject(args)) {
+					for (const [ key, value ] of Object.entries(args)) {
+						container_command_this.push(
+							'--build-arg',
+							`${key}=${replaceVariables(value, env)}`,
+						);
+					}
 				}
 
 				if (checkPath(context) === false) {
