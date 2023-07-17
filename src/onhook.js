@@ -35,33 +35,34 @@ try {
 			: '/app/configs/init.git.path.yml',
 	);
 
-	let steps_external = [];
-	try {
-		steps_external = await readSteps(
-			joinPath(
-				ARGS.git.url
-					? joinPath(
-						'/var/supernova/repos',
-						ARGS.name,
-					)
-					: joinPath(
-						'/bind',
-						ARGS.git.path,
-					),
-				'supernova.config.yml',
-			),
-		);
-	}
-	catch (error) {
-		if (error instanceof SupernovaConfigNotExistsError !== true) {
-			throw error;
-		}
-	}
-
 	await runSteps(
 		steps_system,
 		ARGS.steps,
-		steps_external,
+		async () => {
+			try {
+				return await readSteps(
+					joinPath(
+						ARGS.git.url
+							? joinPath(
+								'/var/supernova/repos',
+								ARGS.name,
+							)
+							: joinPath(
+								'/bind',
+								ARGS.git.path,
+							),
+						'supernova.config.yml',
+					),
+				);
+			}
+			catch (error) {
+				if (error instanceof SupernovaConfigNotExistsError !== true) {
+					throw error;
+				}
+			}
+
+			return [];
+		},
 	);
 
 	supernovaConsole.log('✅ Pipeline completed successfully.');

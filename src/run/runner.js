@@ -98,6 +98,10 @@ async function * runSteps(steps, access_level) {
 		return env;
 	}
 
+	if (typeof steps === 'function') {
+		steps = await steps();
+	}
+
 	for (const step of steps) {
 		if (typeof step === 'string') {
 			if (step === '/next') {
@@ -382,7 +386,7 @@ async function runGenerators(generator, ...generators_next) {
 
 		if (state.value === DIRECTIVE.NEXT) {
 			if (generators_next.length === 0) {
-				throw new Error('Unexpected "@next" directive.');
+				throw new Error('Unexpected "/next" directive.');
 			}
 
 			await runGenerators(...generators_next);
