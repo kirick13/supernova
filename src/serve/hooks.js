@@ -92,11 +92,12 @@ export default async function (request, url) {
 	});
 
 	return new Response(
-		pipeliner.run_id,
+		'OK',
 		{
 			status: 200,
 			headers: {
 				'Content-Type': 'text/plain',
+				'X-Supernova-Run-ID': pipeliner.run_id,
 			},
 		},
 	);
