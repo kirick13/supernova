@@ -3,6 +3,7 @@ steps:
   - name: Use directory with git repository
     image: simplepackages/git
     commands:
+      - git config --global --add safe.directory /opt/supernova
       - GIT_COMMIT: git rev-parse HEAD
       - GIT_COMMIT_SHORT: git rev-parse --short HEAD
       - echo 'Init completed.'
