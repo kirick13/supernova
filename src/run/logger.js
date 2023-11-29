@@ -11,7 +11,9 @@ function consoleArgumentsToChunk(args, write) {
 		}
 
 		write(
-			Bun.inspect(argument),
+			typeof argument === 'string'
+				? argument
+				: Bun.inspect(argument),
 		);
 	}
 
@@ -27,10 +29,13 @@ export function error(...args) {
 }
 
 export function writeOut(chunk) {
-	transform(chunk, (chunk) => {
-		loggerFile.write(chunk);
-		process.stdout.write(chunk);
-	});
+	transform(
+		chunk,
+		(chunk) => {
+			loggerFile.write(chunk);
+			process.stdout.write(chunk);
+		},
+	);
 }
 export function writeError(chunk) {
 	transform(chunk, (chunk) => {

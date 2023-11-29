@@ -5,8 +5,7 @@ steps:
     commands:
       - echo '[url "https://'$GIT_TOKEN'@'$GIT_URL_HOSTNAME'"]' > ~/.gitconfig
       - echo 'InsteadOf = https://'$GIT_URL_HOSTNAME >> ~/.gitconfig
-      - git clone $GIT_URL . || true
-      - git checkout $GIT_BRANCH
+      - git clone -b $GIT_BRANCH --single-branch $GIT_URL . || true
       - git pull
       - GIT_COMMIT: git rev-parse HEAD
       - GIT_COMMIT_SHORT: git rev-parse --short HEAD

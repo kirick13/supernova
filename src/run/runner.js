@@ -1,5 +1,6 @@
 
 /* eslint-disable no-await-in-loop */
+/* eslint-disable complexity */ // FIXME: remove
 
 import { join as joinPath } from 'node:path';
 import shlex                from 'shlex';
@@ -43,6 +44,10 @@ function environment2CommandArguments(env) {
 	const result = [];
 
 	for (const [ key, value ] of Object.entries(env)) {
+		if (typeof value !== 'string') {
+			continue;
+		}
+
 		result.push(
 			'--env',
 			`${key}=${value}`,
@@ -210,6 +215,8 @@ async function * runSteps(steps, access_level) {
 			main_command.push(
 				'run',
 				'--rm',
+				'--name',
+				`supernova-${ARGS.run_id}`,
 				...mounts2CommandArguments(
 					getMounts(),
 				),
@@ -271,7 +278,12 @@ async function * runSteps(steps, access_level) {
 					container_command_this.push('build');
 				}
 
-				container_command_this.push('--push');
+				switch (process.env.SUPERNOVA_OPTIONS_DOCKER_BUILD) {
+					case 'load':
+						break;
+					default:
+						container_command_this.push('--push');
+				}
 
 				if (file !== null) {
 					if (checkPath(file) === false) {
