@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DOCKER_IMAGE='kirickme/supernova'
-DOCKER_TAG='0.7.6-dev'
+DOCKER_TAG='0.7.7-dev'
 
 docker manifest inspect $DOCKER_IMAGE:$DOCKER_TAG >/dev/null 2>&1
 if [ $? -ne 0 ]; then

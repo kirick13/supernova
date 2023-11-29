@@ -1,38 +1,42 @@
 
-import { createValidator,
-         createMultiTypeValidator } from 'oh-my-props';
+import {
+	minLength,
+	never,
+	object,
+	optional,
+	string,
+	union } from 'valibot';
 
-export default createMultiTypeValidator(
-	createValidator({
-		type: Object,
-		entries: {
-			path: {
-				type: String,
-				validator: (value) => value.length > 0,
-			},
+export default union([
+	object(
+		{
+			path: string([
+				minLength(1),
+			]),
 		},
-	}),
-	createValidator({
-		type: Object,
-		entries: {
-			url: {
-				type: String,
-				validator: (value) => value.length > 0,
-			},
-			branch: {
-				type: String,
-				default: 'main',
-			},
-			user: {
-				type: String,
-				default: 'user',
-				validator: (value) => value.length > 0,
-			},
-			token: {
-				type: String,
-				optional: true,
-				validator: (value) => value.length > 0,
-			},
+		never(),
+	),
+	object(
+		{
+			url: string([
+				minLength(1),
+			]),
+			branch: optional(
+				string([
+					minLength(1),
+				]),
+				() => 'main',
+			),
+			user: optional(
+				string([
+					minLength(1),
+				]),
+				() => 'user',
+			),
+			token: optional(string([
+				minLength(1),
+			])),
 		},
-	}),
-);
+		never(),
+	),
+]);

@@ -1,13 +1,15 @@
 
-import { mkdir }            from 'node:fs/promises';
-import { join as joinPath } from 'node:path';
-import YAML                 from 'yaml';
-
-import { SupernovaConfigNotExistsError,
-         SupernovaInvalidConfigError  } from './errors.js';
-import validateConfig                   from './validator/main.js';
-import projectValidator                 from './validator/project.js';
-import stepsValidator                   from './validator/steps.js';
+import { mkdir }                   from 'node:fs/promises';
+import { join as joinPath }        from 'node:path';
+import { parse }                   from 'valibot';
+import YAML                        from 'yaml';
+import {
+	SupernovaConfigNotExistsError,
+	SupernovaConfigParseError,
+	SupernovaConfigValidationError } from './errors.js';
+import validateConfig              from './validator/main.js';
+import projectValidator            from './validator/project.js';
+import stepsValidator              from './validator/steps.js';
 
 export function isPlainObject(value) {
 	return typeof value === 'object' && value !== null && value.constructor === Object;
@@ -32,7 +34,7 @@ async function parseYamlFile(path) {
 		return YAML.parse(file_text);
 	}
 	catch {
-		throw new SupernovaInvalidConfigError(path);
+		throw new SupernovaConfigParseError(path);
 	}
 }
 
@@ -42,8 +44,9 @@ export async function readConfig(path) {
 	try {
 		return validateConfig(config);
 	}
-	catch {
-		throw new SupernovaInvalidConfigError(path);
+	catch (error) {
+		// console.log('error', error, error.issues);
+		throw new SupernovaConfigValidationError(path, error.issues);
 	}
 }
 
@@ -51,10 +54,15 @@ export async function readProject(path) {
 	const config = await parseYamlFile(path);
 
 	try {
-		return projectValidator.cast(config);
+		// return projectValidator.cast(config);
+		return parse(
+			projectValidator,
+			config,
+		);
 	}
-	catch {
-		throw new SupernovaInvalidConfigError(path);
+	catch (error) {
+		// console.log('error', error, error.issues);
+		throw new SupernovaConfigValidationError(path, error.issues);
 	}
 }
 
@@ -62,10 +70,13 @@ export async function readSteps(path) {
 	const config = await parseYamlFile(path);
 
 	try {
-		return stepsValidator.cast(config.steps);
+		return parse(
+			stepsValidator,
+			config.steps,
+		);
 	}
-	catch {
-		throw new SupernovaInvalidConfigError(path);
+	catch (error) {
+		throw new SupernovaConfigValidationError(path, error.issues);
 	}
 }
 

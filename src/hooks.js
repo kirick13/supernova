@@ -7,6 +7,9 @@ import { readConfig,
          replaceVariables      } from './utils.js';
 
 const config = await readConfig('/etc/supernova/config.yml');
+if (process.env.SUPERNOVA_DEBUG) {
+	console.log('config', config);
+}
 
 for (const notifier of Object.values(config.notifications)) {
 	notifier.chat_id = replaceVariables(notifier.chat_id, process.env);
@@ -32,6 +35,9 @@ for (const project_name of Object.keys(config.projects)) {
 
 		// eslint-disable-next-line no-await-in-loop
 		project = await readProject(config_path);
+	}
+	if (process.env.SUPERNOVA_DEBUG) {
+		console.log('project', project);
 	}
 
 	const project_repo = project.repo;

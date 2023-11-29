@@ -5,6 +5,5 @@ _src
 supernova-dev
 .repos
 
-src/backup_node_modules
-src/node_modules
+src/node_modules*
 src/package-lock.json

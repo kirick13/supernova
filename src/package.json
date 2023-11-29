@@ -1,13 +1,13 @@
 {
 	"private": true,
 	"type": "module",
-    "engines": {
-        "node": ">=12.0.0"
-    },
+	"engines": {
+		"node": ">=12.0.0"
+	},
 	"dependencies": {
-        "minimatch": "9.0.1",
-		"oh-my-props": "3.0.0-beta.10",
-        "shlex": "2.1.2",
+		"minimatch": "9.0.1",
+		"shlex": "2.1.2",
+		"valibot": "0.21.0",
 		"yaml": "2.3.1"
 	},
 	"devDependencies": {
@@ -21,6 +21,6 @@
 		"eslint-plugin-unicorn": "47.0.0"
 	},
 	"scripts": {
-		"bun-lock": "rm bun.lockb; mv node_modules backup_node_modules; docker run --rm -v .:/app -w /app oven/bun:0.6.7 bun install && rm -rf node_modules && mv backup_node_modules node_modules"
+		"bun-lock": "rm bun.lockb; mv node_modules node_modules+pnpm; mv node_modules+bun node_modules; bun install && mv node_modules node_modules+bun; mv node_modules+pnpm node_modules"
 	}
 }

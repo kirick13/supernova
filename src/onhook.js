@@ -1,19 +1,20 @@
 
 console.log();
 
-import { join as joinPath } from 'node:path';
-
-import { SupernovaConfigNotExistsError,
-         SupernovaInvalidConfigError  } from './errors.js';
-import * as ARGS                        from './run/args.js';
-import * as dockerVolume                from './run/docker.volume.js';
-import * as supernovaConsole            from './run/logger.js';
-import * as loggerFile                  from './run/logger.file.js';
-import { resetIndentation }             from './run/logger.transformer.js';
-import sendNotifications 			    from './run/notification.js';
-import runSteps                         from './run/runner.js';
-import { SubprocessError }              from './run/shell.js';
-import { readSteps }                    from './utils.js';
+import { join as joinPath }          from 'node:path';
+import {
+	SupernovaConfigNotExistsError,
+	SupernovaConfigParseError,
+	SupernovaConfigValidationError } from './errors.js';
+import * as ARGS                     from './run/args.js';
+import * as dockerVolume             from './run/docker.volume.js';
+import * as supernovaConsole         from './run/logger.js';
+import * as loggerFile               from './run/logger.file.js';
+import { resetIndentation }          from './run/logger.transformer.js';
+import sendNotifications 			 from './run/notification.js';
+import runSteps                      from './run/runner.js';
+import { SubprocessError }           from './run/shell.js';
+import { readSteps }                 from './utils.js';
 
 let exit_code = 0;
 
@@ -77,8 +78,15 @@ catch (error) {
 	else if (error instanceof SupernovaConfigNotExistsError) {
 		supernovaConsole.error(`❌ Config file not found: ${error.path}`);
 	}
-	else if (error instanceof SupernovaInvalidConfigError) {
-		supernovaConsole.error(`❌ Config file is invalid: ${error.path}`);
+	else if (error instanceof SupernovaConfigParseError) {
+		supernovaConsole.error(`❌ Config file cannot be parsed: ${error.path}`);
+	}
+	else if (error instanceof SupernovaConfigValidationError) {
+		supernovaConsole.error(`❌ Config file at path ${error.path} is not valid.`);
+		supernovaConsole.error('   Issues found:');
+		for (const path of error.issues_paths) {
+			supernovaConsole.error(`   - ${path}`);
+		}
 	}
 	else {
 		supernovaConsole.error('❌ Unhandled rejection happened.');

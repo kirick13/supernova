@@ -1,156 +1,108 @@
 
-import { createValidator,
-         createMultiTypeValidator } from 'oh-my-props';
-
-import { ENV_KEY_REGEXP } from '../consts.js';
-import { isPlainObject }  from '../utils.js';
+import {
+	array,
+	boolean,
+	custom,
+	minLength,
+	never,
+	object,
+	optional,
+	record,
+	string,
+	union }                      from 'valibot';
+import { ENV_KEY_REGEXP }        from '../consts.js';
+import stepsDockerBuildValidator from './steps.docker.build.js';
 
 const DIRECTIVES = new Set([
 	'/next',
 	'/pause',
 ]);
 
-export default createValidator({
-	type: Array,
-	values: createMultiTypeValidator(
-		{
-			type: String,
-			validator: (value) => DIRECTIVES.has(value),
-		},
-		{
-			type: Object,
-			entries: {
-				name: {
-					type: String,
-					validator: (value) => value.length > 0,
-				},
-				docker: createMultiTypeValidator(
-					{
-						type: Boolean,
-						optional: true,
-					},
-					{
-						type: Object,
-						optional: true,
-						validator: (value) => Object.keys(value).length === 1,
-						entries: {
-							build: {
-								type: Object,
-								entries: {
-									file: {
-										type: String,
-										optional: true,
-										validator: (value) => value.length > 0,
-									},
-									context: {
-										type: String,
-										default: '.',
-										validator: (value) => value.length > 0,
-									},
-									tag: {
-										type: String,
-										validator: (value) => value.length > 0,
-									},
-									args: {
-										type: Object,
-										optional: true,
-										keys: {
-											type: String,
-											validator: (value) => ENV_KEY_REGEXP.test(value),
-										},
-										values: {
-											type: String,
-											validator: (value) => value.length > 0,
-										},
-									},
-									platforms: {
-										type: Array,
-										optional: true,
-										values: {
-											type: String,
-											validator: (value) => value.length > 0,
-										},
-									},
-								},
-							},
-						},
-					},
-				),
-				image: {
-					type: String,
-					optional: true,
-					validator: (value) => value.length > 0,
-				},
-				bind: {
-					type: Array,
-					optional: true,
-					values: {
-						type: Object,
-						entries: {
-							source: {
-								type: String,
-								validator: (value) => value.length > 0,
-							},
-							target: {
-								type: String,
-								validator: (value) => value.length > 0,
-							},
-							readonly: {
-								type: Boolean,
-								default: false,
-							},
-						},
-					},
-				},
-				container: {
-					type: String,
-					optional: true,
-					validator: (value) => value.length > 0,
-				},
-				commands: {
-					type: Array,
-					optional: true,
-					values: createMultiTypeValidator(
-						{
-							type: String,
-							validator: (value) => value.length > 0,
-						},
-						{
-							type: Object,
-							validator: (value) => Object.keys(value).length === 1,
-							keys: {
-								type: String,
-								validator: (value) => ENV_KEY_REGEXP.test(value),
-							},
-							values: {
-								type: String,
-								validator: (value) => value.length > 0,
-							},
-						},
-					),
-				},
-			},
-			contentValidator(value) {
-				if (isPlainObject(value.docker)) {
-					return value.image === null
-						&& value.bind === null
-						&& value.container === null
-						&& value.commands === null;
-				}
-
-				if (value.image !== null) {
-					return value.container === null
-						&& value.commands !== null;
-				}
-
-				if (value.container !== null) {
-					return value.docker === null
-						&& value.image === null
-						&& value.bind === null;
-				}
-
-				return value.commands !== null;
-			},
-		},
+const stepsNameValidator = string([
+	minLength(1),
+]);
+const stepsBindValidator = optional(
+	array(
+		object({
+			source: string([
+				minLength(1),
+			]),
+			target: string([
+				minLength(1),
+			]),
+			readonly: optional(
+				boolean(),
+				() => false,
+			),
+		}),
 	),
-});
+	() => [],
+);
+const stepsCommandsValidator = array(
+	union([
+		string([
+			minLength(1),
+		]),
+		record(
+			string([
+				custom((value) => ENV_KEY_REGEXP.test(value)),
+			]),
+			string([
+				minLength(1),
+			]),
+			[
+				custom((value) => Object.keys(value).length === 1),
+			],
+		),
+	]),
+);
+
+export default array(
+	union([
+		string([
+			custom((value) => DIRECTIVES.has(value)),
+		]),
+		// using docker
+		object(
+			{
+				name: stepsNameValidator,
+				docker: union([
+					object(
+						{
+							build: stepsDockerBuildValidator,
+						},
+						never(),
+					),
+				]),
+			},
+			never(),
+		),
+		// using container
+		object(
+			{
+				name: stepsNameValidator,
+				container: string([
+					minLength(1),
+				]),
+				commands: stepsCommandsValidator,
+			},
+			never(),
+		),
+		// using image
+		object(
+			{
+				name: stepsNameValidator,
+				image: optional(string([
+					minLength(1),
+				])),
+				docker: optional(
+					boolean(),
+					() => false,
+				),
+				bind: stepsBindValidator,
+				commands: stepsCommandsValidator,
+			},
+			never(),
+		),
+	]),
+);

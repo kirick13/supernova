@@ -53,13 +53,11 @@ projects:
   docker_pass: projects/docker.pass.yml
 
 notifications:
-
   telegram:
     type: telegram
     logs: true
     chat_id: $TELEGRAM_CHAT_ID
     bot_token: $TELEGRAM_BOT_TOKEN
-
   discord:
     type: discord
     logs: false

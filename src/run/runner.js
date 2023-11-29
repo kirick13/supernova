@@ -123,11 +123,14 @@ async function * runSteps(steps, access_level) {
 		const env_as_args = environment2CommandArguments(env);
 
 		const getDockerImage = () => {
-			if (step.image !== null) {
+			if (typeof step.image === 'string') {
 				return step.image;
 			}
 
-			if (step.docker !== null) {
+			if (
+				step.docker === true
+				|| isPlainObject(step.docker)
+			) {
 				return 'docker:24.0.2-alpine3.18';
 			}
 
@@ -193,7 +196,7 @@ async function * runSteps(steps, access_level) {
 		const container_commands = [];
 
 		// exec in local container
-		if (step.container !== null) { // eslint-disable-line unicorn/no-negated-condition
+		if (typeof step.container === 'string') {
 			if (access_level < ACCESS_LEVEL.ADMIN) {
 				throw new Error('You can not execute commands inside local containers.');
 			}
@@ -234,7 +237,7 @@ async function * runSteps(steps, access_level) {
 		if (isPlainObject(step.docker)) {
 			const container_command_this = [ 'docker' ];
 
-			if (step.docker.build !== null) {
+			if (step.docker.build) {
 				for (const [ host, { user, token }] of Object.entries(ARGS.docker.login)) {
 					container_commands.push(
 						shlex.join([
@@ -285,7 +288,7 @@ async function * runSteps(steps, access_level) {
 						container_command_this.push('--push');
 				}
 
-				if (file !== null) {
+				if (typeof file === 'string') {
 					if (checkPath(file) === false) {
 						throw new Error(`You can not build an image from config "${file}".`);
 					}
