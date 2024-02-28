@@ -1,7 +1,7 @@
 
 FROM       docker:24.0 AS docker
 
-FROM       oven/bun:1.0.4
+FROM       oven/bun:1.0.25
 COPY       --from=docker /usr/local/bin/docker /usr/local/bin/docker
 RUN        mkdir -p /app
 WORKDIR    /app

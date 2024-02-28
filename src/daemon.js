@@ -1,8 +1,7 @@
 
 import { HTTPError } from './errors.js';
-
-import serveHook from './serve/hooks.js';
-import serveRun  from './serve/run.js';
+import serveHook     from './serve/hooks.js';
+import serveRun      from './serve/run.js';
 
 Bun.serve({
 	development: false,

@@ -1,0 +1,65 @@
+
+projects:
+
+  passed:
+    displayName: supernova test (should pass)
+    webhookSecret: $WEBHOOK_SECRET
+    repo:
+      url: https://github.com/kirick13/supernova.git
+    steps:
+      - name: Test
+        commands:
+          - echo 1
+    notify:
+      - telegram
+      - discord
+
+  failed:
+    displayName: supernova test (should fail)
+    webhookSecret: $WEBHOOK_SECRET
+    repo:
+      url: https://github.com/kirick13/supernova.git
+    steps:
+      - name: Test
+        commands:
+          - exit 1
+      - name: Test (SHOULD NOT BE EXECUTED)
+        commands:
+          - echo -----
+          - echo THIS IS A PROBLEM
+          - echo -----
+    notify:
+      - telegram
+      - discord
+
+  read_host_file:
+    displayName: supernova read file on host
+    webhookSecret: $WEBHOOK_SECRET
+    repo:
+      url: https://github.com/kirick13/supernova.git
+    steps:
+      - name: Read file
+        bind:
+          - source: $SUPERNOVA_PATH/test/hello-world.txt
+            target: /tmp/hello-world.txt
+        commands:
+          - cat /tmp/hello-world.txt
+    notify:
+      - telegram
+      - discord
+
+  env_variables: projects/env_variables.yml
+
+  docker_pass: projects/docker.pass.yml
+
+notifications:
+  telegram:
+    type: telegram
+    logs: true
+    chat_id: $TELEGRAM_CHAT_ID
+    bot_token: $TELEGRAM_BOT_TOKEN
+  discord:
+    type: discord
+    logs: false
+    chat_id: $DISCORD_CHAT_ID
+    bot_token: $DISCORD_BOT_TOKEN
